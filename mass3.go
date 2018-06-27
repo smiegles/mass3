@@ -1,0 +1,119 @@
+package main
+
+import (
+	"bufio"
+	"flag"
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"strings"
+
+	"github.com/miekg/dns"
+	"github.com/remeh/sizedwaitgroup"
+)
+
+const (
+	s3HostPrefix = "s3.amazonaws.com"
+)
+
+var nameservers []string
+var (
+	threads   int
+	baseName  string
+	wordList  string
+	resolvers string
+)
+
+func main() {
+	flag.StringVar(&wordList, "w", "", "path to the word list")
+	flag.StringVar(&resolvers, "r", "lists/resolvers.txt", "path to the word list")
+	flag.IntVar(&threads, "t", 10, "number of threads")
+	flag.Parse()
+
+	if wordListExists() == false {
+		return
+	}
+	prepareNameservers()
+	wordListProcess()
+}
+
+func prepareNameservers() {
+	file, err := os.Open(resolvers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		nameservers = append(nameservers, scanner.Text())
+	}
+}
+
+func randomNameserver() string {
+	n := rand.Int() % len(nameservers)
+	return nameservers[n]
+}
+
+// processing CNAME
+func resolveCNAME(name string) []dns.RR {
+	msg := dns.Msg{}
+	msg.SetQuestion(name, dns.TypeCNAME)
+	client := &dns.Client{Net: "tcp"}
+	nameserver := randomNameserver()
+	r, _, err := client.Exchange(&msg, nameserver+":53")
+	if err != nil {
+		return nil
+	}
+	return r.Answer
+}
+
+// wordlist processing
+
+func wordListResolve(hosts []string) {
+	swg := sizedwaitgroup.New(threads)
+
+	for j := 0; j < len(hosts); j++ {
+		swg.Add()
+		host := fmt.Sprintf("%s.%s.", hosts[j], s3HostPrefix)
+		go func(host string) {
+			result := resolveCNAME(host)
+			if len(result) == 0 {
+				// No results
+				defer swg.Done()
+				return
+			}
+
+			if v, ok := result[0].(*dns.CNAME); ok {
+				if !strings.Contains(v.Target, "s3-directional") {
+					print(host + "\n")
+				}
+			}
+			defer swg.Done()
+		}(host)
+	}
+	swg.Wait()
+}
+
+func wordListProcess() {
+	var hosts []string
+	file, err := os.Open(wordList)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		hosts = append(hosts, scanner.Text())
+	}
+
+	wordListResolve(hosts)
+}
+
+func wordListExists() bool {
+	if _, err := os.Stat(wordList); os.IsNotExist(err) {
+		print("Wordlist doens't exist.")
+		return false
+	}
+	return true
+}
