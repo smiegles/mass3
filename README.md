@@ -5,7 +5,7 @@ Quickly enumerate through a pre-compiled list of AWS S3 buckets using DNS instea
 
 # Install
 ```shell
-go get github.com/smiegles/mass3
+go get -u github.com/smiegles/mass3
 ```
 
 # Usage
