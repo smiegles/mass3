@@ -1,20 +1,22 @@
 <p align="center">
   <img src="logo.png" width="300px">
  </p>
-Fastly enumerate through a pre-compiled list of AWS s3 buckets using DNS instead of HTTP with a list of DNS resolvers and multi-threading. Warning: Be aware that this is really shitty golang code. I wrote it without any prior knowledge of Go Lang but it seems to do the job. Feel free to contribute to make the tool better!
+Quickly enumerate through a pre-compiled list of AWS S3 buckets using DNS instead of HTTP with a list of DNS resolvers and multi-threading. Warning: Be aware that this is really shitty golang code. I wrote it without any prior knowledge of Go Lang but it seems to do the job. Feel free to contribute to make the tool better!
+
+# Install
+```shell
+go get -u github.com/smiegles/mass3
+```
 
 # Usage
+```shell
+mass3 -w ./lists/buckets.txt -r ./lists/resolvers.txt -t 100
 ```
-go get github.com/miekg/dns
-go get github.com/remeh/sizedwaitgroup
-go build
-./mass3 -w ./lists/buckets.txt -r ./lists/resolvers.txt -t 100
-```
-# Arguments
 
+# Arguments
 | argument | explanation | 
 | --- | --- |
-| -w | The wordlist with all the precompiled S3 buckets (bucketname.s3.amazonaws.com) |
+| -w | The wordlist with all the pre-compiled S3 buckets (bucketname.s3.amazonaws.com) |
 | -r | List with all the resolvers |
 | -t | The amount of threads to use, 10 is default |
 
@@ -25,7 +27,7 @@ A: This tool doesn't know the recon you've already collected, for example, subdo
 
 __Q: The tool returns weird non-existing buckets__
 
-A: The tool relies on the `lists/resolvers.txt` file to be acurate without any "bad" resolvers. You can use [fresh.sh](https://github.com/almroot/fresh.sh) to clean up the list of resolvers.
+A: The tool relies on the `lists/resolvers.txt` file to be accurate without any "bad" resolvers. You can use [fresh.sh](https://github.com/almroot/fresh.sh) to clean up the list of resolvers.
 
 __Q: How many threads should I use?__
 
