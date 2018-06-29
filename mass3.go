@@ -17,12 +17,12 @@ const (
 	s3HostPrefix = "s3.amazonaws.com"
 )
 
-var nameservers []string
 var (
-	threads   int
-	baseName  string
-	wordList  string
-	resolvers string
+	threads     int
+	baseName    string
+	wordList    string
+	resolvers   string
+	nameservers []string
 )
 
 func main() {
