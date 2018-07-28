@@ -22,6 +22,8 @@ var (
 	baseName    string
 	wordList    string
 	resolvers   string
+	output      string
+	results     []string
 	nameservers []string
 )
 
@@ -29,6 +31,7 @@ func main() {
 	flag.StringVar(&wordList, "w", "", "path to the word list")
 	flag.StringVar(&resolvers, "r", "lists/resolvers.txt", "path to the word list")
 	flag.IntVar(&threads, "t", 10, "number of threads")
+	flag.StringVar(&output, "o", "out.csv", "path to the output file")
 	flag.Parse()
 
 	if wordListExists() == false {
@@ -36,6 +39,29 @@ func main() {
 	}
 	prepareNameservers()
 	wordListProcess()
+
+	err := writeResultsToCsv(results, output)
+	if err != nil {
+		fmt.Printf("Couldn't write the results to the output file: %v", err)
+	}
+}
+
+func writeResultsToCsv(results []string, outputFilePath string) error {
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		fmt.Printf("Couldn't create the output file: %v", err)
+		return err
+	}
+	defer outputFile.Close()
+
+	if len(results) != 0 {
+		for _, str := range results {
+			outputFile.WriteString(str + "\n")
+		}
+	} else {
+		outputFile.WriteString("NA")
+	}
+	return nil
 }
 
 func prepareNameservers() {
@@ -87,6 +113,7 @@ func wordListResolve(hosts []string) {
 			if v, ok := result[0].(*dns.CNAME); ok {
 				if !strings.Contains(v.Target, "s3-directional") {
 					print(host + "\n")
+					results = append(results, host)
 				}
 			}
 			defer swg.Done()
