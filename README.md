@@ -19,6 +19,13 @@ mass3 -w ./lists/buckets.txt -r ./lists/resolvers.txt -t 100
 | -w | The wordlist with all the pre-compiled S3 buckets (bucketname.s3.amazonaws.com) |
 | -r | List with all the resolvers |
 | -t | The amount of threads to use, 10 is default |
+| -o | The file path to save the output (This is optional. By default, it will be saved to out.csv) |
+
+# Building the Docker Image
+`docker build -t <name> .`
+
+# Running the Docker Image
+`docker run -it <name> -w buckets.txt -r resolvers.txt -t 100 -o /tmp/out.csv`
 
 # Questions & Answers
 __Q: Why not generate all the "potential" s3 bucket names in the tool?__
