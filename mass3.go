@@ -103,10 +103,10 @@ func wordListResolve(hosts []string) {
 		swg.Add()
 		host := fmt.Sprintf("%s.%s.", hosts[j], s3HostPrefix)
 		go func(host string) {
+			defer swg.Done()
 			result := resolveCNAME(host)
 			if len(result) == 0 {
 				// No results
-				defer swg.Done()
 				return
 			}
 
@@ -116,7 +116,6 @@ func wordListResolve(hosts []string) {
 					results = append(results, host)
 				}
 			}
-			defer swg.Done()
 		}(host)
 	}
 	swg.Wait()
